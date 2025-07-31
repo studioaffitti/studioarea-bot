@@ -4,8 +4,8 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
-const TOKEN = "la-tua-token-ultramsg";
-const INSTANCE_ID = "la-tua-instance-id"; // es: 136108
+const TOKEN = "f99pzn1t922xhemv";
+const INSTANCE_ID = "136108"; // es: 136108
 const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
 app.post("/webhook", async (req, res) => {
