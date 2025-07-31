@@ -1,24 +1,37 @@
-const express = require('express');
+const express = require("express");
+const axios = require("axios");
+
 const app = express();
 app.use(express.json());
 
-app.post('/webhook', (req, res) => {
-    const message = req.body?.body;
-    const sender = req.body?.from;
-    console.log("Messaggio ricevuto:", message);
+const TOKEN = "la-tua-token-ultramsg";
+const INSTANCE_ID = "la-tua-instance-id"; // es: 136108
+const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
-    // Risposta fissa
-    res.json({
-        to: sender,
-        body: "Ciao! Sono l’assistente virtuale StudioArea. Cerchi un immobile in affitto o in vendita? Oppure vuoi vendere casa?"
+app.post("/webhook", async (req, res) => {
+  const message = req.body?.data?.body;
+  const sender = req.body?.data?.from;
+
+  console.log("Messaggio ricevuto:", message);
+
+  if (sender && message) {
+    // Rispondi al messaggio
+    await axios.post(ULTRAMSG_URL, {
+      token: TOKEN,
+      to: sender,
+      body: "Ciao! Sono l’assistente virtuale StudioArea. Cerchi un immobile in affitto o in vendita? Oppure vuoi vendere casa?"
     });
+  }
+
+  res.sendStatus(200);
 });
 
-app.get('/', (req, res) => {
-    res.send('StudioArea bot attivo');
+app.get("/", (req, res) => {
+  res.send("StudioArea bot attivo");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Bot in ascolto sulla porta ${PORT}`);
+  console.log(`Bot in ascolto sulla porta ${PORT}`);
 });
+
