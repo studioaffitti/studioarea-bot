@@ -9,10 +9,9 @@ const INSTANCE_ID = "136108"; // es: 136108
 const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
 app.post("/webhook", async (req, res) => {
-  const message = req.body?.data?.body;
-  const sender = req.body?.data?.from;
-
-  console.log("Messaggio ricevuto:", message);
+ const message = req.body?.body;
+const sender = req.body?.from;
+console.log("Messaggio ricevuto:", message);
 
   if (sender && message) {
     // Rispondi al messaggio
