@@ -43,10 +43,14 @@ const sender = req.body?.dati?.from;
 
     // 3. Avvia la run
     const runRes = await axios.post(
-      `https://api.openai.com/v1/threads/${threadId}/runs`,
-      { assistant_id: ASSISTANT_ID },
-      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
-    );
+  `https://api.openai.com/v1/threads/${threadId}/runs`,
+  {
+    assistant_id: ASSISTANT_ID,
+    model: "gpt-4o"
+  },
+  { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
+);
+
     const runId = runRes.data.id;
     console.log("🏃‍♂️ Run ID:", runId);
 
