@@ -3,6 +3,7 @@ const axios = require("axios");
 const app = express();
 app.use(express.json());
 
+// Variabili d'ambiente
 const TOKEN = process.env.ULTRAMSG_TOKEN;
 const INSTANCE_ID = process.env.INSTANCE_ID;
 const ASSISTANT_ID = process.env.ASSISTANT_ID;
@@ -11,13 +12,15 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
 app.post("/webhook", async (req, res) => {
-  const message = req.body?.data?.body;
-  const sender = req.body?.data?.from;
+  const message = req.body?.body;
+  const sender = req.body?.from;
+
+  console.log("✅ Messaggio ricevuto:", message, "da", sender);
 
   if (!message || !sender) return res.sendStatus(200);
 
   try {
-    // 1. Crea nuova thread
+    // 1. Crea una nuova thread OpenAI
     const threadRes = await axios.post(
       "https://api.openai.com/v1/threads",
       {},
@@ -25,14 +28,14 @@ app.post("/webhook", async (req, res) => {
     );
     const threadId = threadRes.data.id;
 
-    // 2. Aggiungi messaggio dell'utente
+    // 2. Aggiunge il messaggio dell'utente alla thread
     await axios.post(
       `https://api.openai.com/v1/threads/${threadId}/messages`,
       { role: "user", content: message },
       { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
     );
 
-    // 3. Avvia la run dell'assistente
+    // 3. Avvia la run
     const runRes = await axios.post(
       `https://api.openai.com/v1/threads/${threadId}/runs`,
       { assistant_id: ASSISTANT_ID },
@@ -40,25 +43,25 @@ app.post("/webhook", async (req, res) => {
     );
     const runId = runRes.data.id;
 
-    // 4. Aspetta la risposta
-    let runStatus = "queued";
-    while (runStatus !== "completed" && runStatus !== "failed") {
+    // 4. Attendi completamento della run
+    let status = "queued";
+    while (status !== "completed" && status !== "failed") {
       await new Promise(r => setTimeout(r, 1000));
-      const statusRes = await axios.get(
+      const resStatus = await axios.get(
         `https://api.openai.com/v1/threads/${threadId}/runs/${runId}`,
         { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
       );
-      runStatus = statusRes.data.status;
+      status = resStatus.data.status;
     }
 
-    // 5. Prendi risposta
+    // 5. Recupera la risposta dell'assistente
     const messagesRes = await axios.get(
       `https://api.openai.com/v1/threads/${threadId}/messages`,
       { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
     );
     const reply = messagesRes.data.data.find(m => m.role === "assistant")?.content?.[0]?.text?.value;
 
-    // 6. Invia via WhatsApp
+    // 6. Invia su WhatsApp
     if (reply) {
       await axios.post(ULTRAMSG_URL, {
         token: TOKEN,
@@ -67,7 +70,7 @@ app.post("/webhook", async (req, res) => {
       });
       console.log("✅ Risposta inviata:", reply);
     } else {
-      console.warn("⚠ Nessuna risposta trovata.");
+      console.warn("⚠️ Nessuna risposta trovata.");
     }
 
     res.sendStatus(200);
@@ -79,10 +82,10 @@ app.post("/webhook", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("StudioArea bot collegato ad Assistant OpenAI");
+  res.send("🤖 StudioArea bot attivo e collegato a OpenAI");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Bot attivo sulla porta ${PORT}`);
+  console.log(`Bot in ascolto sulla porta ${PORT}`);
 });
