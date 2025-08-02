@@ -14,8 +14,8 @@ const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 app.post("/webhook", async (req, res) => {
   console.log("📩 Webhook ricevuto:", JSON.stringify(req.body, null, 2));
 
-  const message = req.body?.body;
-  const sender = req.body?.from;
+  const message = req.body?.data?.body;
+const sender = req.body?.data?.from;
 
   console.log("✅ Messaggio ricevuto:", message, "da", sender);
 
