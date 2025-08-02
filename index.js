@@ -12,8 +12,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const ULTRAMSG_URL = `https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`;
 
 app.post("/webhook", async (req, res) => {
+  console.log("📩 Webhook ricevuto:", JSON.stringify(req.body, null, 2));
+
   const message = req.body?.body;
   const sender = req.body?.from;
+
 
   console.log("✅ Messaggio ricevuto:", message, "da", sender);
 
