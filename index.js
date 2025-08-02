@@ -17,12 +17,13 @@ app.post("/webhook", async (req, res) => {
   const message = req.body?.body;
   const sender = req.body?.from;
 
-
   console.log("✅ Messaggio ricevuto:", message, "da", sender);
 
   if (!message || !sender) return res.sendStatus(200);
 
   try {
+    console.log("🚀 Inizio gestione OpenAI...");
+
     // 1. Crea una nuova thread OpenAI
     const threadRes = await axios.post(
       "https://api.openai.com/v1/threads",
@@ -30,8 +31,9 @@ app.post("/webhook", async (req, res) => {
       { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
     );
     const threadId = threadRes.data.id;
+    console.log("📎 Thread ID:", threadId);
 
-    // 2. Aggiunge il messaggio dell'utente alla thread
+    // 2. Aggiunge il messaggio dell'utente
     await axios.post(
       `https://api.openai.com/v1/threads/${threadId}/messages`,
       { role: "user", content: message },
@@ -45,8 +47,9 @@ app.post("/webhook", async (req, res) => {
       { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
     );
     const runId = runRes.data.id;
+    console.log("🏃‍♂️ Run ID:", runId);
 
-    // 4. Attendi completamento della run
+    // 4. Attendi completamento run
     let status = "queued";
     while (status !== "completed" && status !== "failed") {
       await new Promise(r => setTimeout(r, 1000));
@@ -55,6 +58,7 @@ app.post("/webhook", async (req, res) => {
         { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
       );
       status = resStatus.data.status;
+      console.log("⌛ Stato run:", status);
     }
 
     // 5. Recupera la risposta dell'assistente
@@ -64,20 +68,22 @@ app.post("/webhook", async (req, res) => {
     );
     const reply = messagesRes.data.data.find(m => m.role === "assistant")?.content?.[0]?.text?.value;
 
-    // 6. Invia su WhatsApp
+    console.log("💬 Risposta ricevuta da OpenAI:", reply);
+
+    // 6. Invia la risposta su WhatsApp
     if (reply) {
+      console.log("📤 Invio risposta a:", sender);
       await axios.post(ULTRAMSG_URL, {
         token: TOKEN,
         to: sender,
         body: reply
       });
-      console.log("✅ Risposta inviata:", reply);
+      console.log("✅ Risposta inviata!");
     } else {
       console.warn("⚠️ Nessuna risposta trovata.");
     }
 
     res.sendStatus(200);
-
   } catch (error) {
     console.error("❌ Errore:", error.message);
     res.sendStatus(500);
