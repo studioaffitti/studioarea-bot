@@ -26,14 +26,14 @@ const sender = req.body?.dati?.from;
     console.log("🚀 Inizio gestione OpenAI...");
 
     // 1. Crea una nuova thread OpenAI
-    const threadRes = await axios.post(
-      "https://api.openai.com/v1/threads",
-      {},
-      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
-    );
-    const threadId = threadRes.data.id;
-    console.log("📎 Thread ID:", threadId);
-
+    const runRes = await axios.post(
+  `https://api.openai.com/v1/threads/${threadId}/runs`,
+  {
+    assistant_id: ASSISTANT_ID,
+    model: "gpt-4o"
+  },
+  { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
+);
     // 2. Aggiunge il messaggio dell'utente
     await axios.post(
       `https://api.openai.com/v1/threads/${threadId}/messages`,
